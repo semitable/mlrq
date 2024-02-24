@@ -1,9 +1,8 @@
 import functools
 import json
-import time
 import uuid
 from datetime import datetime
-from typing import Any, Callable, Literal
+from typing import Callable, Literal
 
 from redis import Redis
 
@@ -195,21 +194,3 @@ class Worker:
             self.process_batch(job, job_key, queue)
         else:
             self.process_single_job(job, job_key)
-
-
-if __name__ == "__main__":
-    _REDIS = Redis(decode_responses=True)
-    result = batch_slow_func(
-        _REDIS, model_id="microsoft/phi-2", prompt="hello from 1", max_tokens=3
-    )
-    result2 = batch_slow_func(
-        _REDIS, model_id="microsoft/phi-2", prompt="hello from 2", max_tokens=3
-    )
-    result3 = batch_slow_func(
-        _REDIS, model_id="microsoft/phi-2", prompt="hello from 3", max_tokens=3
-    )
-    result4 = my_slow_func(
-        _REDIS, model_id="microsoft/phi-2", prompt="hello from 4", max_tokens=3
-    )
-
-    worker = Worker(_REDIS, implements=[my_slow_func, batch_slow_func])
