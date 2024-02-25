@@ -141,7 +141,15 @@ class Worker:
             job_keys.append(new_job_key)
 
         args_list = [json.loads(j["args"]) for j in jobs]
-        args_list = [{key: arg[key] for key in batch_on} for arg in args_list]
+
+        args_list = [
+            {
+                key: arg[key]
+                for key in arg.keys()
+                if batch_on == "__all__" or key in batch_on
+            }
+            for arg in args_list
+        ]
 
         kwargs = {
             key: [d[key] for d in args_list if key in d]
