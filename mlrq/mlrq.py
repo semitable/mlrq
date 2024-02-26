@@ -2,7 +2,7 @@ import functools
 import json
 import uuid
 from datetime import datetime
-from typing import Callable, Literal
+from typing import Callable, Literal, Any
 
 from redis import Redis
 
@@ -111,7 +111,7 @@ class Worker:
     def __init__(
         self,
         rclient: Redis,
-        implements: list[Callable],
+        implements: dict[Callable, dict[str, Any]],
         priorities: list[str] = ["high", "normal", "low"],
     ) -> None:
         self.rclient = rclient
@@ -158,9 +158,9 @@ class Worker:
 
         kwargs = {**json.loads(job["args"]), **kwargs}
 
-        for func in self.functions:
+        for func in self.functions.keys():
             if func.__name__ == job["function"]:
-                results = func.__wrapped__(**kwargs)
+                results = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
             print("Function not implemented. Bug?")
@@ -176,9 +176,9 @@ class Worker:
     def process_single_job(self, job, job_key):
         kwargs = json.loads(job["args"])
 
-        for func in self.functions:
+        for func in self.functions.keys():
             if func.__name__ == job["function"]:
-                result = func.__wrapped__(**kwargs)
+                results = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
             print("Function not implemented. Bug?")
