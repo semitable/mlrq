@@ -193,12 +193,13 @@ class Worker:
     def run(self):
         print(f"Listening on {self.queues}")
 
-        queue, job_id = self.rclient.blpop(self.queues)
-        job_key = f"{_job_prefix}:{job_id}"
-        job = self.rclient.hgetall(job_key)
+        while True:
+            queue, job_id = self.rclient.blpop(self.queues)
+            job_key = f"{_job_prefix}:{job_id}"
+            job = self.rclient.hgetall(job_key)
 
-        batch = json.loads(job["batch"])
-        if batch["max_batch_size"] > 1:
-            self.process_batch(job, job_key, queue)
-        else:
-            self.process_single_job(job, job_key)
+            batch = json.loads(job["batch"])
+            if batch["max_batch_size"] > 1:
+                self.process_batch(job, job_key, queue)
+            else:
+                self.process_single_job(job, job_key)
