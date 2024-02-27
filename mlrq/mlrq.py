@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Callable, Literal, Any
 
 from redis import Redis
+import logging
 
 _job_prefix = "mlrq:job"
 _job_q_prefix = "mlrq:job_queue"
@@ -91,7 +92,7 @@ class Job:
 
         self.rclient.hset(self.job_key, mapping=data)
         self.rclient.rpush(self.job_q, self.job_id)
-        print(f"Job {self.job_key} pushed in queue {self.job_q}")
+        logging.info(f"Job {self.job_key} pushed in queue {self.job_q}")
 
         self.rclient.expire(self.job_key, _expiration_time)
         self.rclient.expire(self.job_q, _expiration_time)
@@ -163,7 +164,7 @@ class Worker:
                 results = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
-            print("Function not implemented. Bug?")
+            logging.warning("Function not implemented. Bug?")
             raise ValueError
 
         for job, job_key, result in zip(jobs, job_keys, results):
@@ -181,7 +182,7 @@ class Worker:
                 results = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
-            print("Function not implemented. Bug?")
+            logging.warning("Function not implemented. Bug?")
             raise ValueError
 
         self.rclient.hset(
@@ -191,7 +192,7 @@ class Worker:
         self.rclient.expire(job_key, _expiration_time)
 
     def run(self):
-        print(f"Listening on {self.queues}")
+        logging.info(f"Listening on {self.queues}")
 
         while True:
             queue, job_id = self.rclient.blpop(self.queues)
