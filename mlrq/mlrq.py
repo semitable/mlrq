@@ -191,10 +191,10 @@ class Worker:
         )
         self.rclient.expire(job_key, _expiration_time)
 
-    def run(self):
+    def run(self, stop_condition: Callable | None = None):
         logging.info(f"Listening on {self.queues}")
 
-        while True:
+        while stop_condition is None or not stop_condition():
             queue, job_id = self.rclient.blpop(self.queues)
             job_key = f"{_job_prefix}:{job_id}"
             job = self.rclient.hgetall(job_key)
