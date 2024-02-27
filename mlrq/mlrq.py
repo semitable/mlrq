@@ -179,7 +179,7 @@ class Worker:
 
         for func in self.functions.keys():
             if func.__name__ == job["function"]:
-                results = func.__wrapped__(**self.functions[func], **kwargs)
+                result = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
             logging.warning("Function not implemented. Bug?")
