@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mlrq"
-version = "0.1.4"
+version = "0.1.5"
 description = ""
 authors = ["Filippos Christianos <f.christianos@ed.ac.uk>"]
 readme = "README.md"

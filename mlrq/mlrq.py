@@ -1,11 +1,13 @@
 import functools
 import json
+import logging
 import uuid
 from datetime import datetime
-from typing import Callable, Literal, Any
+from typing import Any, Callable, Literal
 
 from redis import Redis
-import logging
+
+logger = logging.getLogger("mlrq")
 
 _job_prefix = "mlrq:job"
 _job_q_prefix = "mlrq:job_queue"
@@ -92,7 +94,7 @@ class Job:
 
         self.rclient.hset(self.job_key, mapping=data)
         self.rclient.rpush(self.job_q, self.job_id)
-        logging.info(f"Job {self.job_key} pushed in queue {self.job_q}")
+        logger.info(f"Job {self.job_key} pushed in queue {self.job_q}")
 
         self.rclient.expire(self.job_key, _expiration_time)
         self.rclient.expire(self.job_q, _expiration_time)
@@ -164,7 +166,7 @@ class Worker:
                 results = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
-            logging.warning("Function not implemented. Bug?")
+            logger.warning("Function not implemented. Bug?")
             raise ValueError
 
         for job, job_key, result in zip(jobs, job_keys, results):
@@ -182,7 +184,7 @@ class Worker:
                 result = func.__wrapped__(**self.functions[func], **kwargs)
                 break
         else:
-            logging.warning("Function not implemented. Bug?")
+            logger.warning("Function not implemented. Bug?")
             raise ValueError
 
         self.rclient.hset(
@@ -192,7 +194,7 @@ class Worker:
         self.rclient.expire(job_key, _expiration_time)
 
     def run(self, stop_condition: Callable | None = None):
-        logging.info(f"Listening on {self.queues}")
+        logger.info(f"Listening on {self.queues}")
 
         while stop_condition is None or not stop_condition():
             queue, job_id = self.rclient.blpop(self.queues)
